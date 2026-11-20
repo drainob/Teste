@@ -1,0 +1,759 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Treinador Jobava London</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: uma coluna estreita, tabuleiro primeiro, explicação logo abaixo, controles fixos ao alcance do polegar.
+   Paleta: azul-ardósia (tabuleiro), tinta fria (texto), âmbar para o lance jogado, vermelho para ameaça, verde para ideia. */
+:root{
+  --bg:#f1f4f9; --surface:#ffffff; --ink:#131a27; --muted:#556178; --line:#d8dfeb; --soft:#e7ecf4;
+  --accent:#2a56d6; --accent-ink:#ffffff;
+  --sq-l:#e4e9f1; --sq-d:#7d94b6; --co-l:#7d94b6; --co-d:#e4e9f1;
+  --pw-fill:#fbfaf6; --pw-stroke:#18202e; --pb-fill:#2c3548; --pb-stroke:#080b11; --detail-w:#18202e; --detail-b:#dbe2ee;
+  --a-m:#e0a014; --a-r:#d8433b; --a-g:#1f9a69; --a-b:#3b73e6; --a-y:#e0a014;
+  --good:#17805a; --bad:#bf352f; --warn:#a56d06; --opp:#4a5c80;
+  --font-head:'Space Grotesk','Inter',system-ui,sans-serif; --font-body:'Inter',system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d121a; --surface:#161e2a; --ink:#e8edf6; --muted:#9aa6bb; --line:#283345; --soft:#1f2937;
+    --accent:#86a8ff; --accent-ink:#0b1220;
+    --sq-l:#b4c1d6; --sq-d:#5b7295; --co-l:#5b7295; --co-d:#b4c1d6;
+    --pw-fill:#f4f2ea; --pb-fill:#222a3c; --pb-stroke:#04060a;
+    --a-m:#f0b429; --a-r:#f06259; --a-g:#34c48a; --a-b:#6f9bff; --a-y:#f0b429;
+    --good:#3fc28d; --bad:#f06b64; --warn:#e5a93a; --opp:#9bb0d8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d121a; --surface:#161e2a; --ink:#e8edf6; --muted:#9aa6bb; --line:#283345; --soft:#1f2937;
+  --accent:#86a8ff; --accent-ink:#0b1220;
+  --sq-l:#b4c1d6; --sq-d:#5b7295; --co-l:#5b7295; --co-d:#b4c1d6;
+  --pw-fill:#f4f2ea; --pb-fill:#222a3c; --pb-stroke:#04060a;
+  --a-m:#f0b429; --a-r:#f06259; --a-g:#34c48a; --a-b:#6f9bff; --a-y:#f0b429;
+  --good:#3fc28d; --bad:#f06b64; --warn:#e5a93a; --opp:#9bb0d8;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 28px;margin:0;-webkit-text-size-adjust:100%}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--font-head);font-weight:700;font-size:1.35rem;line-height:1.2;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:.86rem}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:3px;gap:3px}
+.seg button{font:inherit;font-weight:600;border:0;background:transparent;color:var(--muted);padding:9px 10px;border-radius:9px;cursor:pointer;min-height:40px}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(10,20,40,.14)}
+.picker{display:flex;flex-direction:column;gap:4px}
+.picker label{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+select{font:inherit;font-weight:500;width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:44px}
+.board-wrap{width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;touch-action:manipulation;box-shadow:0 1px 0 var(--line)}
+.board-wrap svg{display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.board-wrap.shake{animation:shake .32s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.board-wrap.shake{animation:none}}
+.sq-l{fill:var(--sq-l)} .sq-d{fill:var(--sq-d)}
+.co-l{fill:var(--co-l)} .co-d{fill:var(--co-d)}
+.co{font:600 20px var(--font-body);pointer-events:none}
+.pw{fill:var(--pw-fill);stroke:var(--pw-stroke);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;--detail:var(--detail-w)}
+.pb{fill:var(--pb-fill);stroke:var(--pb-stroke);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;--detail:var(--detail-b)}
+.d{fill:none;stroke:var(--detail);stroke-width:1.3}
+.e{fill:var(--detail);stroke:none}
+.mk-r{fill:var(--a-r)} .mk-g{fill:var(--a-g)} .mk-y{fill:var(--a-y)} .mk-b{fill:var(--a-b)} .mk-sel{fill:var(--a-b)} .mk-lm{fill:var(--a-m)}
+.ar-m{color:var(--a-m)} .ar-r{color:var(--a-r)} .ar-g{color:var(--a-g)} .ar-b{color:var(--a-b)} .ar-y{color:var(--a-y)}
+.dot{fill:#101828;opacity:.28} .ring{fill:none;stroke:#101828;stroke-opacity:.3;stroke-width:9}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+.entry{display:flex;flex-direction:column;gap:5px}
+.entry+.entry{border-top:1px solid var(--line);padding-top:10px}
+.head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.chip.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.chip.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.chip.hint{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.chip.opp{background:color-mix(in srgb,var(--opp) 18%,transparent);color:var(--opp)}
+.mv{font-family:var(--font-head);font-weight:700;font-size:1.25rem;letter-spacing:-.01em}
+.txt{margin:0;color:var(--ink);max-width:62ch}
+.txt.muted{color:var(--muted);font-size:.88rem}
+.end{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:.88rem;color:var(--ink)}
+.controls{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.btn{font:inherit;font-weight:600;font-size:.95rem;min-height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;padding:0 10px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,select:focus-visible,.mchip:focus-visible,.seg button:focus-visible,input:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:2px}
+.moves{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.mchip{font:inherit;font-size:.82rem;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 9px;border-radius:8px;cursor:pointer;min-height:32px;font-variant-numeric:tabular-nums}
+.mchip.b{color:var(--muted)}
+.mchip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mchip.future{opacity:.45}
+.opts{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
+.opts label{display:flex;align-items:center;gap:8px;min-height:32px}
+.opts input{width:18px;height:18px;accent-color:var(--accent)}
+.legend{font-size:.84rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.legend summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.legend ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
+.sw{display:inline-block;width:18px;height:6px;border-radius:3px;vertical-align:middle;margin-right:6px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="P" viewBox="0 0 45 45">
+      <circle cx="22.5" cy="13" r="5.2"/>
+      <path d="M16.5 35C16.5 28 20.3 25 20.7 20.5H24.3C24.7 25 28.5 28 28.5 35Z"/>
+      <rect x="17.5" y="19" width="10" height="3" rx="1.5"/>
+      <rect x="13.5" y="34" width="18" height="4.6" rx="2"/>
+    </symbol>
+    <symbol id="R" viewBox="0 0 45 45">
+      <rect x="12" y="33" width="21" height="5.6" rx="1.5"/>
+      <path d="M15.5 33L16.6 20H28.4L29.5 33Z"/>
+      <path d="M13.5 20V9.5H18V13H20.8V9.5H24.2V13H27V9.5H31.5V20Z"/>
+      <path class="d" d="M16.6 24H28.4"/>
+    </symbol>
+    <symbol id="N" viewBox="0 0 45 45">
+      <path d="M12 38.6H33.5C34.2 28 33.2 19 27.2 13C25.2 11 23.6 10 23 7.4L20.4 10C19.4 9.6 18.4 9.6 17.4 10.6C14 13.6 9.6 19 8.6 24C8.2 26 10 27.6 12 26.6C14 25.6 15.6 23.2 18 22.6C19 22.4 19.6 22.8 19 23.8C16.6 27 12 28 12 33Z"/>
+      <circle class="e" cx="18.6" cy="14.8" r="1.25"/>
+      <circle class="e" cx="10.6" cy="24.2" r=".8"/>
+      <path class="d" d="M25 12.6C29 17 30.6 24 30 31"/>
+    </symbol>
+    <symbol id="B" viewBox="0 0 45 45">
+      <rect x="12.5" y="34" width="20" height="4.6" rx="2"/>
+      <path d="M16 34C16 30 19 28.6 20 25H25C26 28.6 29 30 29 34Z"/>
+      <path d="M22.5 8.4C27.2 12.4 28.6 17.4 25.6 23.4H19.4C16.4 17.4 17.8 12.4 22.5 8.4Z"/>
+      <rect x="17.5" y="23" width="10" height="2.8" rx="1.3"/>
+      <circle cx="22.5" cy="7" r="2.1"/>
+      <path class="d" d="M20.8 15L24.6 19.2"/>
+    </symbol>
+    <symbol id="Q" viewBox="0 0 45 45">
+      <rect x="11" y="34" width="23" height="4.6" rx="2"/>
+      <path d="M12.6 34L9.6 14.4L15 24L16.2 10.6L19.6 23.6L22.5 9L25.4 23.6L28.8 10.6L30 24L35.4 14.4L32.4 34Z"/>
+      <circle cx="9.6" cy="12.6" r="2"/><circle cx="16.2" cy="9" r="2"/><circle cx="22.5" cy="7.4" r="2"/><circle cx="28.8" cy="9" r="2"/><circle cx="35.4" cy="12.6" r="2"/>
+      <path class="d" d="M14 30H31"/>
+    </symbol>
+    <symbol id="K" viewBox="0 0 45 45">
+      <rect x="11" y="34" width="23" height="4.6" rx="2"/>
+      <path d="M13 34C13 27.4 15 23.4 17 19.6H28C30 23.4 32 27.4 32 34Z"/>
+      <path d="M14.6 19.6C12.6 14.4 16.6 11.6 22.5 12.4C28.4 11.6 32.4 14.4 30.4 19.6Z"/>
+      <path d="M21 2.6H24V5.6H27V8.6H24V11.6H21V8.6H18V5.6H21Z"/>
+      <path class="d" d="M15 29H30"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="app">
+  <header>
+    <h1>Treinador Jobava London</h1>
+    <p class="sub">1.d4 d5 2.Nc3 Nf6 3.Bf4. Você joga de brancas e entende a ideia de cada lance.</p>
+  </header>
+
+  <div class="seg" role="tablist" aria-label="Modo">
+    <button id="tab-study" role="tab" aria-selected="true">Estudar</button>
+    <button id="tab-train" role="tab" aria-selected="false">Treinar</button>
+  </div>
+
+  <div class="picker">
+    <label for="line">Variante</label>
+    <select id="line"></select>
+  </div>
+
+  <div class="board-wrap" id="bw"><svg id="board" viewBox="0 0 800 800" role="img" aria-label="Tabuleiro de xadrez"></svg></div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+  <div class="controls" id="controls"></div>
+  <ol class="moves" id="moves"></ol>
+
+  <div class="opts">
+    <label for="dots"><input type="checkbox" id="dots"> Mostrar casas legais</label>
+    <span id="prog"></span>
+  </div>
+
+  <details class="legend">
+    <summary>Como ler as setas e a notação</summary>
+    <ul>
+      <li><span class="sw" style="background:var(--a-m)"></span>Amarela: o lance que acabou de ser jogado.</li>
+      <li><span class="sw" style="background:var(--a-r)"></span>Vermelha: ameaça ou ataque.</li>
+      <li><span class="sw" style="background:var(--a-g)"></span>Verde: ideia ou plano.</li>
+      <li><span class="sw" style="background:var(--a-b)"></span>Azul: defesa ou lance do adversário.</li>
+      <li>Notação em inglês, como no Lichess e no Chess.com: N cavalo, B bispo, R torre, Q dama, K rei. Peão não leva letra.</li>
+      <li>Em Treinar, toque na peça e depois na casa de destino. Lances que não são da variante não são jogados: o tabuleiro avisa e você tenta de novo.</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+const Chess = (function () {
+  const FILES = 'abcdefgh';
+  const sqName = (i) => FILES[i & 7] + ((i >> 3) + 1);
+  const sqIdx = (n) => (n.charCodeAt(1) - 49) * 8 + (n.charCodeAt(0) - 97);
+  const colorOf = (p) => (p ? (p === p.toUpperCase() ? 'w' : 'b') : null);
+  const VAL = { P: 1, N: 3, B: 3, R: 5, Q: 9, K: 100 };
+  const KN = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
+  const KG = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  const DG = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+  const OR = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+  function start() {
+    const b = new Array(64).fill('');
+    const back = 'RNBQKBNR';
+    for (let f = 0; f < 8; f++) {
+      b[f] = back[f];
+      b[8 + f] = 'P';
+      b[48 + f] = 'p';
+      b[56 + f] = back[f].toLowerCase();
+    }
+    return { b, turn: 'w', c: { K: 1, Q: 1, k: 1, q: 1 }, ep: -1 };
+  }
+
+  function clone(s) {
+    return { b: s.b.slice(), turn: s.turn, c: Object.assign({}, s.c), ep: s.ep };
+  }
+
+  // Values of every piece of colour `by` that attacks square `sq`.
+  function attackers(s, sq, by) {
+    const out = [];
+    const b = s.b, f = sq & 7, r = sq >> 3;
+    const w = by === 'w';
+    const pr = w ? r - 1 : r + 1;
+    if (pr >= 0 && pr < 8) {
+      for (const df of [-1, 1]) {
+        const pf = f + df;
+        if (pf >= 0 && pf < 8 && b[pr * 8 + pf] === (w ? 'P' : 'p')) out.push(1);
+      }
+    }
+    for (const [df, dr] of KN) {
+      const nf = f + df, nr = r + dr;
+      if (nf >= 0 && nf < 8 && nr >= 0 && nr < 8 && b[nr * 8 + nf] === (w ? 'N' : 'n')) out.push(3);
+    }
+    for (const [df, dr] of KG) {
+      const nf = f + df, nr = r + dr;
+      if (nf >= 0 && nf < 8 && nr >= 0 && nr < 8 && b[nr * 8 + nf] === (w ? 'K' : 'k')) out.push(100);
+    }
+    for (const [dirs, kind] of [[DG, 'B'], [OR, 'R']]) {
+      for (const [df, dr] of dirs) {
+        let nf = f + df, nr = r + dr;
+        while (nf >= 0 && nf < 8 && nr >= 0 && nr < 8) {
+          const p = b[nr * 8 + nf];
+          if (p) {
+            const u = p.toUpperCase();
+            if (colorOf(p) === by && (u === kind || u === 'Q')) out.push(VAL[u]);
+            break;
+          }
+          nf += df;
+          nr += dr;
+        }
+      }
+    }
+    return out;
+  }
+  const attacked = (s, sq, by) => attackers(s, sq, by).length > 0;
+
+  function pseudo(s) {
+    const mv = [], b = s.b, me = s.turn, op = me === 'w' ? 'b' : 'w';
+    for (let i = 0; i < 64; i++) {
+      const p = b[i];
+      if (!p || colorOf(p) !== me) continue;
+      const u = p.toUpperCase(), f = i & 7, r = i >> 3;
+      if (u === 'P') {
+        const d = me === 'w' ? 1 : -1, sr = me === 'w' ? 1 : 6, pr = me === 'w' ? 7 : 0;
+        const r1 = r + d;
+        const push = (to, extra) => {
+          if ((to >> 3) === pr) for (const pc of 'QRBN') mv.push(Object.assign({ from: i, to, piece: p, promo: pc }, extra));
+          else mv.push(Object.assign({ from: i, to, piece: p }, extra));
+        };
+        if (r1 >= 0 && r1 < 8 && !b[r1 * 8 + f]) {
+          push(r1 * 8 + f, {});
+          if (r === sr && !b[(r + 2 * d) * 8 + f]) mv.push({ from: i, to: (r + 2 * d) * 8 + f, piece: p, dbl: true });
+        }
+        for (const df of [-1, 1]) {
+          const nf = f + df;
+          if (nf < 0 || nf > 7 || r1 < 0 || r1 > 7) continue;
+          const t = r1 * 8 + nf;
+          if (b[t] && colorOf(b[t]) === op) push(t, { cap: b[t] });
+          else if (t === s.ep) mv.push({ from: i, to: t, piece: p, cap: op === 'w' ? 'P' : 'p', ep: true });
+        }
+      } else if (u === 'N' || u === 'K') {
+        for (const [df, dr] of u === 'N' ? KN : KG) {
+          const nf = f + df, nr = r + dr;
+          if (nf < 0 || nf > 7 || nr < 0 || nr > 7) continue;
+          const t = nr * 8 + nf;
+          if (!b[t]) mv.push({ from: i, to: t, piece: p });
+          else if (colorOf(b[t]) === op) mv.push({ from: i, to: t, piece: p, cap: b[t] });
+        }
+      } else {
+        const dirs = u === 'B' ? DG : u === 'R' ? OR : DG.concat(OR);
+        for (const [df, dr] of dirs) {
+          let nf = f + df, nr = r + dr;
+          while (nf >= 0 && nf < 8 && nr >= 0 && nr < 8) {
+            const t = nr * 8 + nf;
+            if (!b[t]) mv.push({ from: i, to: t, piece: p });
+            else {
+              if (colorOf(b[t]) === op) mv.push({ from: i, to: t, piece: p, cap: b[t] });
+              break;
+            }
+            nf += df;
+            nr += dr;
+          }
+        }
+      }
+    }
+    // castling
+    if (me === 'w') {
+      if (s.c.K && b[4] === 'K' && b[7] === 'R' && !b[5] && !b[6] && !attacked(s, 4, op) && !attacked(s, 5, op) && !attacked(s, 6, op))
+        mv.push({ from: 4, to: 6, piece: 'K', castle: 'K' });
+      if (s.c.Q && b[4] === 'K' && b[0] === 'R' && !b[1] && !b[2] && !b[3] && !attacked(s, 4, op) && !attacked(s, 3, op) && !attacked(s, 2, op))
+        mv.push({ from: 4, to: 2, piece: 'K', castle: 'Q' });
+    } else {
+      if (s.c.k && b[60] === 'k' && b[63] === 'r' && !b[61] && !b[62] && !attacked(s, 60, op) && !attacked(s, 61, op) && !attacked(s, 62, op))
+        mv.push({ from: 60, to: 62, piece: 'k', castle: 'K' });
+      if (s.c.q && b[60] === 'k' && b[56] === 'r' && !b[57] && !b[58] && !b[59] && !attacked(s, 60, op) && !attacked(s, 59, op) && !attacked(s, 58, op))
+        mv.push({ from: 60, to: 58, piece: 'k', castle: 'Q' });
+    }
+    return mv;
+  }
+
+  function apply(s, m) {
+    const n = clone(s), b = n.b, me = s.turn;
+    b[m.from] = '';
+    b[m.to] = m.promo ? (me === 'w' ? m.promo : m.promo.toLowerCase()) : m.piece;
+    if (m.ep) b[m.to + (me === 'w' ? -8 : 8)] = '';
+    if (m.castle === 'K') { const rk = me === 'w' ? 0 : 56; b[rk + 5] = b[rk + 7]; b[rk + 7] = ''; }
+    if (m.castle === 'Q') { const rk = me === 'w' ? 0 : 56; b[rk + 3] = b[rk]; b[rk] = ''; }
+    if (m.piece === 'K') { n.c.K = 0; n.c.Q = 0; }
+    if (m.piece === 'k') { n.c.k = 0; n.c.q = 0; }
+    for (const sq of [m.from, m.to]) {
+      if (sq === 0) n.c.Q = 0;
+      if (sq === 7) n.c.K = 0;
+      if (sq === 56) n.c.q = 0;
+      if (sq === 63) n.c.k = 0;
+    }
+    n.ep = m.dbl ? (m.from + m.to) / 2 : -1;
+    n.turn = me === 'w' ? 'b' : 'w';
+    return n;
+  }
+
+  function kingSq(s, color) {
+    const k = color === 'w' ? 'K' : 'k';
+    return s.b.indexOf(k);
+  }
+
+  function inCheck(s) {
+    const op = s.turn === 'w' ? 'b' : 'w';
+    return attacked(s, kingSq(s, s.turn), op);
+  }
+
+  function legal(s) {
+    const op = s.turn === 'w' ? 'b' : 'w';
+    return pseudo(s).filter((m) => {
+      const n = apply(s, m);
+      return !attacked(n, kingSq(n, s.turn), op);
+    });
+  }
+
+  function san(s, m, L) {
+    L = L || legal(s);
+    let out;
+    const u = m.piece.toUpperCase();
+    if (m.castle) out = m.castle === 'K' ? 'O-O' : 'O-O-O';
+    else if (u === 'P') {
+      out = m.cap ? FILES[m.from & 7] + 'x' + sqName(m.to) : sqName(m.to);
+      if (m.promo) out += '=' + m.promo;
+    } else {
+      out = u;
+      const others = L.filter((x) => x !== m && x.piece === m.piece && x.to === m.to && x.from !== m.from);
+      if (others.length) {
+        const sf = others.some((x) => (x.from & 7) === (m.from & 7));
+        const sr = others.some((x) => (x.from >> 3) === (m.from >> 3));
+        if (!sf) out += FILES[m.from & 7];
+        else if (!sr) out += String((m.from >> 3) + 1);
+        else out += sqName(m.from);
+      }
+      if (m.cap) out += 'x';
+      out += sqName(m.to);
+    }
+    const n = apply(s, m);
+    if (inCheck(n)) out += legal(n).length ? '+' : '#';
+    return out;
+  }
+
+  return { start, legal, apply, san, inCheck, sqName, sqIdx, colorOf, attackers, attacked, VAL, FILES, kingSq };
+})();
+if (typeof module !== 'undefined') module.exports = Chess;
+
+</script>
+<script>
+(function () {
+  var E = Chess;
+  var LINES = [{"id":"e6-na6","group":"Teoria","title":"3...e6 4.Nb5 Na6","sub":"Linha principal contra ...e6","plan":"Black defende c7 com o cavalo. Você expulsa o cavalo de b5 sem pressa, desenvolve com e3, Nf3 e Bd3 e escolhe entre roque e ataque na ala do rei.","end":"Aqui termina a teoria desta linha no treinador. Para ir além, estude um curso ou um estudo do Lichess sobre a Jobava London.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: protege d5 e abre o bispo de f8. O preço é que c7 fica defendido só pela dama.","arrows":[],"marks":["c7y"]},{"san":"Nb5","key":"Nb5","from":18,"to":33,"idea":"O salto temático. Ameaça Nxc7+, garfo no rei e na torre de a8 (o Bf4 também mira c7). Black precisa defender c7 agora.","arrows":["b5c7r","f4c7r"],"marks":["c7r"]},{"san":"Na6","key":"Na6","from":57,"to":40,"idea":"A defesa mais comum: o cavalo de b8 vai para a6 e passa a cobrir c7.","arrows":["a6c7b"],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Protege o Bf4 (o peão e3 o defende), solta o bispo de f1 e prepara Nf3 e Bd3.","arrows":["e3f4g","f1d3g"],"marks":[]},{"san":"c6","key":"c6","from":50,"to":42,"idea":"Expulsa o cavalo de b5 e ganha espaço no centro.","arrows":["c6b5b"],"marks":[]},{"san":"Nc3","key":"Nc3","from":33,"to":18,"idea":"O cavalo volta para uma casa útil, apoiando e4 e d5. Repare que o cavalo preto em a6 ficou na borda, mal posicionado.","arrows":["c3e4g"],"marks":[]},{"san":"Nc7","key":"Nc7","from":40,"to":50,"idea":"O cavalo sai da borda e passa a proteger d5 e e6. Black ainda escolhe entre ...Bd6, ...Be7 e ...Bb4.","arrows":["c7d5b"],"marks":[]},{"san":"Nf3","key":"Nf3","from":6,"to":21,"idea":"Desenvolve e vigia e5. Planos: Bd3 e O-O, ou Ne5 seguido de avanço de peões na ala do rei.","arrows":["f3e5g"],"marks":[]}]},{"id":"e6-bd6","group":"Teoria","title":"3...e6 4.Nb5 Bd6","sub":"Defendendo c7 com o bispo","plan":"Você troca o bispo defensor de c7 e deixa Black com peões dobrados. Cuidado com a armadilha de recapturar com a dama.","end":"Linha curta. Daqui o plano é desenvolver (Nf3, Bd3) e recuar o cavalo quando Black jogar ...a6.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: protege d5 e abre o bispo de f8. O preço é que c7 fica defendido só pela dama.","arrows":[],"marks":["c7y"]},{"san":"Nb5","key":"Nb5","from":18,"to":33,"idea":"O salto temático. Ameaça Nxc7+, garfo no rei e na torre de a8 (o Bf4 também mira c7). Black precisa defender c7 agora.","arrows":["b5c7r","f4c7r"],"marks":["c7r"]},{"san":"Bd6","key":"Bd6","from":61,"to":43,"idea":"Outra forma de defender c7: o bispo cobre a casa pela diagonal d6-c7.","arrows":["d6c7b"],"marks":[]},{"san":"Bxd6","key":"Bxd6","from":29,"to":43,"idea":"Elimina o defensor de c7. Detalhe importante: o Nb5 também ataca d6, então recapturar com a dama seria um erro grave.","arrows":["b5d6r"],"marks":["d6r"]},{"san":"cxd6","key":"cxd6","from":50,"to":43,"idea":"A recaptura correta. Black fica com peões dobrados em d5 e d6 e sem o peão da coluna c.","arrows":[],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Desenvolvimento calmo: o bispo de f1 fica livre e Nf3 e Bd3 vêm a seguir. Quando Black jogar ...a6, o cavalo recua para c3.","arrows":["f1d3g"],"marks":[]}]},{"id":"e6-bb4","group":"Teoria","title":"3...e6 4.Nb5 Bb4+","sub":"Xeque antes de defender c7","plan":"Você bloqueia o xeque com c3 atacando o bispo. Ele precisa recuar mantendo c7 protegido.","end":"Linha curta. A teoria continua, e o cavalo em b5 segue incomodando Black enquanto c7 for fraco.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: protege d5 e abre o bispo de f8. O preço é que c7 fica defendido só pela dama.","arrows":[],"marks":["c7y"]},{"san":"Nb5","key":"Nb5","from":18,"to":33,"idea":"O salto temático. Ameaça Nxc7+, garfo no rei e na torre de a8 (o Bf4 também mira c7). Black precisa defender c7 agora.","arrows":["b5c7r","f4c7r"],"marks":["c7r"]},{"san":"Bb4+","key":"Bb4","from":61,"to":25,"idea":"Xeque. Black ganha um tempo antes de defender c7.","arrows":["b4e1r"],"marks":[]},{"san":"c3","key":"c3","from":10,"to":18,"idea":"Interpõe o peão no xeque e já ataca o bispo, ganhando tempo de volta.","arrows":["c3b4g"],"marks":[]},{"san":"Ba5","key":"Ba5","from":25,"to":32,"idea":"O bispo recua mantendo c7 defendido pela diagonal a5-c7. Se recuasse para e7?, Nxc7+ ganharia material.","arrows":["a5c7b"],"marks":[]}]},{"id":"c5","group":"Teoria","title":"3...c5 4.e3 cxd4 5.exd4","sub":"Contra-ataque imediato no centro","plan":"Após a troca em d4, a coluna c abre e c7 fica fraca de novo. Black joga ...a6 para impedir Nb5, e você desenvolve.","end":"Linha curta. Siga com Bd3, roque e peças ativas.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"c5","key":"c5","from":50,"to":34,"idea":"Desafia o peão de d4 imediatamente. É a resposta mais ativa para Black.","arrows":["c5d4b"],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Apoia d4, protege o Bf4 e abre o bispo de f1.","arrows":["e3d4g"],"marks":[]},{"san":"cxd4","key":"cxd4","from":34,"to":27,"idea":"Troca o peão c pelo peão d e abre a coluna c.","arrows":[],"marks":[]},{"san":"exd4","key":"exd4","from":20,"to":27,"idea":"Recaptura com o peão e. A coluna c abriu e c7 ficou vazia, então Nb5 seguido de Nc7+ volta a ser ameaça (o Bf4 apoia c7). O bispo de f1 ganha a diagonal para d3 e b5.","arrows":["c3b5g"],"marks":["c7y"]},{"san":"a6","key":"a6","from":48,"to":40,"idea":"Impede Nb5: o peão de a6 controla essa casa.","arrows":["a6b5b"],"marks":[]},{"san":"Nf3","key":"Nf3","from":6,"to":21,"idea":"Desenvolvimento natural. Depois vêm Bd3 e roque. A estrutura é simétrica, então ganha quem desenvolver melhor e tiver o plano mais claro.","arrows":["f3e5g"],"marks":[]}]},{"id":"c6","group":"Teoria","title":"3...c6 4.e3 Bf5 5.f3","sub":"Setup tipo Slav com ...Bf5","plan":"Com f3 você prepara g4 para expulsar o bispo de f5 e ganha espaço na ala do rei. Depois h4 ameaça aprisionar o bispo.","end":"Linha atribuída a Williams numa revisão de John Watson. A ideia é espaço e iniciativa na ala do rei.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"c6","key":"c6","from":50,"to":42,"idea":"Estilo Slav: protege d5 e tira a casa b5 do cavalo.","arrows":["c6b5b"],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Protege o Bf4, solta o bispo de f1 e prepara Bd3.","arrows":["e3f4g"],"marks":[]},{"san":"Bf5","key":"Bf5","from":58,"to":37,"idea":"O bispo sai para fora da corrente de peões antes de ...e6, espelhando o Bf4.","arrows":[],"marks":[]},{"san":"f3","key":"f3","from":13,"to":21,"idea":"Prepara g2-g4 para atacar o bispo de f5 e apoia o avanço e2-e4.","arrows":["g2g4g"],"marks":[]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Protege o bispo de f5 e abre o bispo de f8.","arrows":[],"marks":[]},{"san":"g4","key":"g4","from":14,"to":30,"idea":"Ataca o bispo de f5. Ele precisa decidir para onde ir.","arrows":["g4f5r"],"marks":[]},{"san":"Bg6","key":"Bg6","from":37,"to":46,"idea":"O recuo natural, mantendo o bispo na diagonal b1-h7.","arrows":[],"marks":[]},{"san":"h4","key":"h4","from":15,"to":31,"idea":"Ameaça h5, que prenderia o bispo de g6 sem casa de recuo.","arrows":["h4h5r"],"marks":[]},{"san":"h6","key":"h6","from":55,"to":47,"idea":"Dá a casa h7 ao bispo: depois de h5, o bispo vai para h7.","arrows":[],"marks":[]},{"san":"Bd3","key":"Bd3","from":5,"to":19,"idea":"Oferece a troca do bispo ativo de Black. Se ele aceitar, a dama recaptura no centro.","arrows":["d3g6g"],"marks":[]},{"san":"Bxd3","key":"Bxd3","from":46,"to":19,"idea":"Black aceita a troca.","arrows":[],"marks":[]},{"san":"Qxd3","key":"Qxd3","from":3,"to":19,"idea":"A dama recaptura e fica central. As brancas têm mais espaço na ala do rei (g4 e h4). Planos: Nge2, roque longo e h5 ou g5.","arrows":["d3g6g"],"marks":[]}]},{"id":"g6-bh6","group":"Teoria","title":"3...g6 4.Qd2 Bg7 5.Bh6","sub":"Contra o fianchetto: troca em h6","plan":"Dama em d2 e bispo em h6 para eliminar o defensor do rei. Depois, roque longo e ataque com h4-h5.","end":"Linha curta. O plano é O-O-O e h4-h5 contra o rei de Black.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"g6","key":"g6","from":54,"to":46,"idea":"Fianchetto: o bispo vai para g7, perto do roque.","arrows":[],"marks":[]},{"san":"Qd2","key":"Qd2","from":3,"to":11,"idea":"Prepara Bh6 para trocar o bispo do fianchetto e libera o roque longo.","arrows":["d2h6g","f4h6g"],"marks":[]},{"san":"Bg7","key":"Bg7","from":61,"to":54,"idea":"O bispo entra pela longa diagonal e protege o roque.","arrows":[],"marks":[]},{"san":"Bh6","key":"Bh6","from":29,"to":47,"idea":"A ideia da abertura contra o fianchetto: trocar o bispo que protege o rei. Se ...Bxh6, Qxh6 impede o roque curto, porque f8 fica atacada pela dama.","arrows":["h6g7r"],"marks":["g7r"]},{"san":"O-O","key":"O-O","from":60,"to":62,"idea":"Black roca e aceita a troca.","arrows":[],"marks":[]},{"san":"Bxg7","key":"Bxg7","from":47,"to":54,"idea":"Elimina o defensor do roque.","arrows":[],"marks":[]},{"san":"Kxg7","key":"Kxg7","from":62,"to":54,"idea":"A recaptura é com o rei, que fica exposto. As casas escuras ao redor (f6, g7, h6) ficam mais frágeis. O plano seguinte das brancas é O-O-O e h4-h5.","arrows":[],"marks":["g7y"]}]},{"id":"g6-f3","group":"Teoria","title":"3...g6 4.Qd2 c6 5.f3","sub":"Centro com f3 e e4","plan":"Com f3 você prepara e4 e e5, ganhando espaço e deixando Black sem boas casas para o cavalo de f6.","end":"Linha comentada por John Watson. Black tinha opções mais sólidas, mas o plano das brancas (e4, e5, roque longo) é típico.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"g6","key":"g6","from":54,"to":46,"idea":"Fianchetto: o bispo vai para g7, perto do roque.","arrows":[],"marks":[]},{"san":"Qd2","key":"Qd2","from":3,"to":11,"idea":"Prepara Bh6 para trocar o bispo do fianchetto e libera o roque longo.","arrows":["d2h6g","f4h6g"],"marks":[]},{"san":"c6","key":"c6","from":50,"to":42,"idea":"Reforça d5 e tira a casa b5 do cavalo.","arrows":["c6b5b"],"marks":[]},{"san":"f3","key":"f3","from":13,"to":21,"idea":"Prepara e2-e4, apoiando o centro com o peão f.","arrows":["e2e4g"],"marks":[]},{"san":"Bg7","key":"Bg7","from":61,"to":54,"idea":"O bispo entra pela longa diagonal e protege o roque.","arrows":[],"marks":[]},{"san":"e4","key":"e4","from":12,"to":28,"idea":"Quebra central: desafia o peão de d5 e ocupa o centro.","arrows":["e4d5r"],"marks":[]},{"san":"O-O","key":"O-O","from":60,"to":62,"idea":"Black roca. O comentarista John Watson sugere ...Be6 como mais sólido aqui.","arrows":[],"marks":[]},{"san":"e5","key":"e5","from":28,"to":36,"idea":"Ganha espaço atacando o cavalo de f6.","arrows":["e5f6r"],"marks":[]},{"san":"Nfd7","key":"Nfd7","from":45,"to":51,"idea":"O cavalo recua. Se fosse ...Nh5?, Be3 e g2-g4 prenderiam o cavalo (ideia citada por Watson).","arrows":[],"marks":[]},{"san":"O-O-O","key":"O-O-O","from":4,"to":2,"idea":"Roque longo: a torre vai para o centro, a dama em d2 apoia Bh6 e o ataque na ala do rei começa com h4-h5.","arrows":["d2h6g"],"marks":[]}]},{"id":"bf5","group":"Teoria","title":"3...Bf5 4.Nf3","sub":"Bispo ativo de Black","plan":"Desenvolva com Nf3 e e3 e use Bd3 para trocar os bispos ativos. Ne5 é uma ideia a ter em mente.","end":"Linha curta. A teoria continua com ...Bb4, ...Bd6, ...c5 ou ...Be7.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"Bf5","key":"Bf5","from":58,"to":37,"idea":"O bispo sai para fora dos peões, simétrico ao Bf4.","arrows":[],"marks":[]},{"san":"Nf3","key":"Nf3","from":6,"to":21,"idea":"Desenvolve, vigia e5 e prepara e3 e Bd3 (trocar os bispos ativos) ou Ne5.","arrows":["f3e5g"],"marks":[]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Reforça d5 e protege o bispo de f5.","arrows":[],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Protege o Bf4 e prepara Bd3.","arrows":["f1d3g"],"marks":[]}]},{"id":"a6","group":"Teoria","title":"3...a6 4.e3 e6 5.g4","sub":"Antídoto contra Nb5","plan":"Com a6 o salto Nb5 deixa de funcionar. Sem problema: você muda para o ataque de peões g4-g5, com o Bf4 apoiando g5.","end":"Linha curta. Boa para quem gosta de atacar: Black precisa decidir o que fazer com o cavalo de f6.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"a6","key":"a6","from":48,"to":40,"idea":"Impede o salto Nb5. É uma das formas de enfrentar a Jobava.","arrows":["a6b5b"],"marks":[]},{"san":"e3","key":"e3","from":12,"to":20,"idea":"Protege o Bf4 e abre o bispo de f1.","arrows":["e3f4g"],"marks":[]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: abre o bispo de f8.","arrows":[],"marks":[]},{"san":"g4","key":"g4","from":14,"to":30,"idea":"Como Nb5 não funciona, o plano é atacar com peões: g4-g5 ganha espaço. O Bf4 apoia o peão em g5.","arrows":["g4g5g"],"marks":[]},{"san":"Bb4","key":"Bb4","from":61,"to":25,"idea":"Crava o Nc3 contra o rei.","arrows":["b4c3r"],"marks":[]},{"san":"Ne2","key":"Ne2","from":6,"to":12,"idea":"O cavalo de g1 vai para e2 (o de c3 está cravado). Protege o cavalo de c3: se ...Bxc3+, Nxc3 recaptura sem dobrar peões.","arrows":["e2c3g"],"marks":[]},{"san":"O-O","key":"O-O","from":60,"to":62,"idea":"Roque curto. O rei vai justamente para onde o ataque de peões vai apontar.","arrows":[],"marks":[]},{"san":"a3","key":"a3","from":8,"to":16,"idea":"Pergunta ao bispo: se ...Bxc3+, Nxc3 e as brancas ficam com o par de bispos.","arrows":["a3b4r"],"marks":[]},{"san":"Be7","key":"Be7","from":25,"to":52,"idea":"O bispo recua e evita a troca.","arrows":[],"marks":[]},{"san":"g5","key":"g5","from":30,"to":38,"idea":"Ataca o cavalo de f6, apoiado pelo Bf4. Black escolhe entre ...Nh5 e ...Nfd7.","arrows":["g5f6r"],"marks":[]}]},{"id":"trap-c6","group":"Armadilhas","title":"4...c6? 5.Nc7+","sub":"Garfo em c7","plan":"Se Black responde ao Nb5 com ...c6?, a casa c7 fica vazia e o garfo funciona.","end":"Moral: antes de qualquer lance, olhe se c7 está defendido.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: protege d5 e abre o bispo de f8. O preço é que c7 fica defendido só pela dama.","arrows":[],"marks":["c7y"]},{"san":"Nb5","key":"Nb5","from":18,"to":33,"idea":"O salto temático. Ameaça Nxc7+, garfo no rei e na torre de a8 (o Bf4 também mira c7). Black precisa defender c7 agora.","arrows":["b5c7r","f4c7r"],"marks":["c7r"]},{"san":"c6","key":"c6","from":50,"to":42,"idea":"Erro: o peão ataca o cavalo, mas libera a casa c7 para um garfo.","arrows":["c6b5b"],"marks":["c7r"]},{"san":"Nc7+","key":"Nc7","from":33,"to":50,"idea":"Garfo! Xeque no rei e ataque à torre de a8. Se ...Qxc7, Bxc7 ganha a dama.","arrows":["c7e8r","c7a8r"],"marks":[]},{"san":"Ke7","key":"Ke7","from":60,"to":52,"idea":"O rei sai do xeque. Com ...Qxc7?, Bxc7 perderia a dama.","arrows":[],"marks":[]},{"san":"Nxa8","key":"Nxa8","from":50,"to":56,"idea":"Ganha a torre. O cavalo fica preso em a8 e Black precisa de vários lances para capturá-lo: as brancas ganham pelo menos a qualidade (torre por cavalo).","arrows":[],"marks":["a8y"]}]},{"id":"trap-qxd6","group":"Armadilhas","title":"5...Qxd6?? 6.Nxd6+","sub":"A dama cai em d6","plan":"Depois de Bxd6, Black não pode recapturar com a dama porque o cavalo de b5 ataca d6.","end":"Moral: o cavalo em b5 vigia d6 e c7 ao mesmo tempo.","moves":[{"san":"d4","key":"d4","from":11,"to":27,"idea":"Ocupa o centro e abre a diagonal do bispo de c1. É o lance que define o jogo de peão da dama.","arrows":["d4e5g"],"marks":[]},{"san":"d5","key":"d5","from":51,"to":35,"idea":"Black responde no mesmo estilo: ocupa o centro e prepara o desenvolvimento do cavalo.","arrows":[],"marks":[]},{"san":"Nc3","key":"Nc3","from":1,"to":18,"idea":"A marca da Jobava: o cavalo sai antes do bispo. Apoia o avanço e2-e4 e prepara o salto Nb5, que mira a casa fraca c7.","arrows":["c3b5g","c3e4g"],"marks":[]},{"san":"Nf6","key":"Nf6","from":62,"to":45,"idea":"Desenvolve e vigia e4, para que as brancas não consigam e2-e4 de graça.","arrows":["f6e4b"],"marks":[]},{"san":"Bf4","key":"Bf4","from":2,"to":29,"idea":"O bispo sai antes de ...e6 prendê-lo atrás dos peões. Ele mira c7, que junto com o Nb5 vira o alvo central desta abertura.","arrows":["f4c7g"],"marks":["c7y"]},{"san":"e6","key":"e6","from":52,"to":44,"idea":"Sólido: protege d5 e abre o bispo de f8. O preço é que c7 fica defendido só pela dama.","arrows":[],"marks":["c7y"]},{"san":"Nb5","key":"Nb5","from":18,"to":33,"idea":"O salto temático. Ameaça Nxc7+, garfo no rei e na torre de a8 (o Bf4 também mira c7). Black precisa defender c7 agora.","arrows":["b5c7r","f4c7r"],"marks":["c7r"]},{"san":"Bd6","key":"Bd6","from":61,"to":43,"idea":"Outra forma de defender c7: o bispo cobre a casa pela diagonal d6-c7.","arrows":["d6c7b"],"marks":[]},{"san":"Bxd6","key":"Bxd6","from":29,"to":43,"idea":"Elimina o defensor de c7. Detalhe importante: o Nb5 também ataca d6, então recapturar com a dama seria um erro grave.","arrows":["b5d6r"],"marks":["d6r"]},{"san":"Qxd6","key":"Qxd6","from":59,"to":43,"idea":"Recapturar com a dama parece natural, mas é um erro.","arrows":["d8d6b"],"marks":[]},{"san":"Nxd6+","key":"Nxd6","from":33,"to":43,"idea":"O cavalo de b5 também atacava d6. Xeque e captura da dama.","arrows":["d6e8r"],"marks":["d6r"]},{"san":"cxd6","key":"cxd6","from":50,"to":43,"idea":"Black recaptura o cavalo. Resultado: as brancas ganharam uma dama por um cavalo.","arrows":[],"marks":[]}]}];
+  var PN = { P: 'peão', N: 'cavalo', B: 'bispo', R: 'torre', Q: 'dama', K: 'rei' };
+  var $ = function (id) { return document.getElementById(id); };
+  var strip = function (s) { return s.replace(/[+#]/g, ''); };
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  function findLegal(s, from, to) {
+    return E.legal(s).find(function (m) { return m.from === from && m.to === to && (!m.promo || m.promo === 'Q'); });
+  }
+  // Pré-computa as posições de cada variante
+  LINES.forEach(function (l) {
+    l.states = [E.start()];
+    l.moves.forEach(function (m, i) { l.states.push(E.apply(l.states[i], findLegal(l.states[i], m.from, m.to))); });
+  });
+  var byId = {};
+  LINES.forEach(function (l) { byId[l.id] = l; });
+
+  // Árvore de lances (junta todas as variantes)
+  var root = { kids: new Map(), lines: new Set() };
+  LINES.forEach(function (l) {
+    var n = root;
+    l.moves.forEach(function (m, i) {
+      var c = n.kids.get(m.key);
+      if (!c) { c = { move: m, kids: new Map(), lines: new Set() }; n.kids.set(m.key, c); }
+      c.lines.add(l.id);
+      n = c;
+    });
+  });
+
+  var mode = store.get('jl-mode', 'study');
+  var flip = false;
+  var showDots = store.get('jl-dots', true);
+  var studyLine = store.get('jl-study', LINES[0].id);
+  var trainLine = store.get('jl-train', 'all');
+  if (!byId[studyLine]) studyLine = LINES[0].id;
+  if (trainLine !== 'all' && !byId[trainLine]) trainLine = 'all';
+  var sPly = 0;
+  var T = null;
+  var prog = store.get('jl-prog', {});
+
+  var label = function (ply, san) { return Math.ceil(ply / 2) + (ply % 2 ? '.' : '...') + san; };
+  var xy = function (i) { var f = i & 7, r = i >> 3; return flip ? [(7 - f) * 100, r * 100] : [f * 100, (7 - r) * 100]; };
+  var ctr = function (i) { var p = xy(i); return [p[0] + 50, p[1] + 50]; };
+  var parseArrow = function (a) { return { f: E.sqIdx(a.slice(0, 2)), t: E.sqIdx(a.slice(2, 4)), c: a[4] }; };
+  var parseMark = function (a) { return { sq: E.sqIdx(a.slice(0, 2)), c: a[2] }; };
+
+  function arrowSVG(a) {
+    var p1 = ctr(a.f), p2 = ctr(a.t);
+    var dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+    var knight = (Math.abs(dx) === 200 && Math.abs(dy) === 100) || (Math.abs(dx) === 100 && Math.abs(dy) === 200);
+    var pts = [p1];
+    if (knight) pts.push(Math.abs(dx) === 200 ? [p2[0], p1[1]] : [p1[0], p2[1]]);
+    pts.push(p2);
+    var A = pts[pts.length - 2], B = pts[pts.length - 1];
+    var len = Math.hypot(B[0] - A[0], B[1] - A[1]);
+    var ux = (B[0] - A[0]) / len, uy = (B[1] - A[1]) / len;
+    var tip = [B[0] - ux * 6, B[1] - uy * 6];
+    var base = [tip[0] - ux * 34, tip[1] - uy * 34];
+    var nx = -uy, ny = ux;
+    var shaft = pts.slice(0, -1).concat([[base[0] + ux * 4, base[1] + uy * 4]]);
+    var d = shaft.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    var head = [tip, [base[0] + nx * 22, base[1] + ny * 22], [base[0] - nx * 22, base[1] - ny * 22]]
+      .map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+    return '<g class="ar-' + a.c + '" style="opacity:.85"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><polygon points="' + head + '" fill="currentColor"/></g>';
+  }
+
+  function drawBoard(s, o) {
+    o = o || {};
+    var h = '';
+    for (var i = 0; i < 64; i++) {
+      var p = xy(i), f = i & 7, r = i >> 3;
+      h += '<rect x="' + p[0] + '" y="' + p[1] + '" width="100" height="100" class="' + (((f + r) % 2 === 0) ? 'sq-d' : 'sq-l') + '"/>';
+    }
+    (o.marks || []).forEach(function (m) {
+      var p = xy(m.sq);
+      h += '<rect x="' + p[0] + '" y="' + p[1] + '" width="100" height="100" class="mk-' + m.c + '" opacity=".42"/>';
+    });
+    for (var j = 0; j < 64; j++) {
+      var q = xy(j), ff = j & 7, rr = j >> 3, dark = ((ff + rr) % 2 === 0);
+      var bottomRow = flip ? rr === 7 : rr === 0;
+      var leftCol = flip ? ff === 7 : ff === 0;
+      if (leftCol) h += '<text class="co ' + (dark ? 'co-d' : 'co-l') + '" x="' + (q[0] + 6) + '" y="' + (q[1] + 24) + '">' + (rr + 1) + '</text>';
+      if (bottomRow) h += '<text class="co ' + (dark ? 'co-d' : 'co-l') + '" x="' + (q[0] + 78) + '" y="' + (q[1] + 94) + '" text-anchor="middle">' + E.FILES[ff] + '</text>';
+    }
+    for (var k = 0; k < 64; k++) {
+      var pc = s.b[k];
+      if (!pc) continue;
+      var pp = xy(k);
+      h += '<use href="#' + pc.toUpperCase() + '" class="' + (pc === pc.toUpperCase() ? 'pw' : 'pb') + '" x="' + pp[0] + '" y="' + pp[1] + '" width="100" height="100"/>';
+    }
+    (o.dots || []).forEach(function (d) {
+      var c = ctr(d.sq);
+      h += d.cap ? '<circle class="ring" cx="' + c[0] + '" cy="' + c[1] + '" r="44"/>' : '<circle class="dot" cx="' + c[0] + '" cy="' + c[1] + '" r="15"/>';
+    });
+    (o.arrows || []).forEach(function (a) { h += arrowSVG(a); });
+    $('board').innerHTML = h;
+  }
+
+  function lastMarks(from, to) { return [{ sq: from, c: 'lm' }, { sq: to, c: 'lm' }]; }
+
+  // ---------- ESTUDAR ----------
+  function renderStudy() {
+    var L = byId[studyLine], i = sPly, s = L.states[i];
+    var arrows = [], marks = [];
+    if (i > 0) {
+      var m = L.moves[i - 1];
+      marks = lastMarks(m.from, m.to).concat(m.marks.map(parseMark));
+      arrows.push({ f: m.from, t: m.to, c: 'm' });
+      m.arrows.forEach(function (a) { arrows.push(parseArrow(a)); });
+    }
+    drawBoard(s, { marks: marks, arrows: arrows });
+    var h = '';
+    if (i === 0) {
+      h += '<div class="entry"><div class="head"><span class="chip">Variante</span></div><div class="mv">' + L.title + '</div><p class="txt">' + L.plan + '</p><p class="txt muted">Toque em ›  para ver cada lance com a ideia por trás dele.</p></div>';
+    } else {
+      var m2 = L.moves[i - 1];
+      h += '<div class="entry"><div class="head"><span class="chip">' + (i % 2 ? 'Brancas' : 'Pretas') + '</span><span class="mv">' + label(i, m2.san) + '</span></div><p class="txt">' + m2.idea + '</p></div>';
+      if (i === L.moves.length) h += '<div class="entry"><div class="end">' + L.end + '</div></div>';
+    }
+    $('card').innerHTML = h;
+    $('controls').innerHTML =
+      '<button class="btn" data-a="first" aria-label="Início"' + (i === 0 ? ' disabled' : '') + '>«</button>' +
+      '<button class="btn" data-a="prev" aria-label="Lance anterior"' + (i === 0 ? ' disabled' : '') + '>‹</button>' +
+      '<button class="btn primary" data-a="next" aria-label="Próximo lance"' + (i === L.moves.length ? ' disabled' : '') + '>›</button>' +
+      '<button class="btn" data-a="last" aria-label="Fim"' + (i === L.moves.length ? ' disabled' : '') + '>»</button>' +
+      '<button class="btn" data-a="flip" aria-label="Virar tabuleiro">⇅</button>';
+    var ml = '';
+    L.moves.forEach(function (mm, idx) {
+      var ply = idx + 1;
+      ml += '<li><button class="mchip ' + (ply % 2 ? 'w' : 'b') + (ply === i ? ' on' : '') + '" data-p="' + ply + '">' + label(ply, mm.san) + '</button></li>';
+    });
+    $('moves').innerHTML = ml;
+    var on = $('moves').querySelector('.on');
+    if (on && on.scrollIntoView) { /* lista quebra em linhas; sem rolagem necessária */ }
+    $('prog').textContent = '';
+  }
+
+  // ---------- TREINAR ----------
+  function eligible(node) {
+    return Array.from(node.kids.values()).filter(function (c) { return T.lineId === 'all' || c.lines.has(T.lineId); });
+  }
+  function startTrain() {
+    T = { lineId: trainLine, s: E.start(), node: root, hist: [], sel: null, errors: 0, hints: 0, whiteTotal: 0, clean: 0, failed: false,
+      last: null, shown: null, hint: null, done: false, lock: false, cards: [], legal: null };
+    T.legal = E.legal(T.s);
+    T.cards = [{ type: 'prompt', title: 'Sua vez', text: T.lineId === 'all'
+      ? 'Treino aleatório: Black escolhe uma resposta e você precisa saber a resposta certa. Jogue o primeiro lance.'
+      : 'Jogue o primeiro lance de ' + byId[T.lineId].title + '. Toque na peça e depois na casa de destino.' }];
+    render();
+  }
+  function hangingWarn(s, m) {
+    var n = E.apply(s, m), list = [];
+    for (var i = 0; i < 64; i++) {
+      var p = n.b[i];
+      if (!p || E.colorOf(p) !== 'w' || p === 'K') continue;
+      var att = E.attackers(n, i, 'b');
+      if (!att.length) continue;
+      var val = E.VAL[p.toUpperCase()], defended = E.attacked(n, i, 'w');
+      if (!defended || Math.min.apply(null, att) < val) list.push({ i: i, p: p, val: val, defended: defended });
+    }
+    if (!list.length) return '';
+    list.sort(function (a, b) { return b.val - a.val; });
+    var x = list[0];
+    return ' Atenção: seu ' + PN[x.p.toUpperCase()] + ' em ' + E.sqName(x.i) + ' ficaria atacado' + (x.defended ? '' : ' e sem defesa') + '.';
+  }
+  function setShown(m) {
+    T.shown = { arrows: [{ f: m.from, t: m.to, c: 'm' }].concat(m.arrows.map(parseArrow)), marks: lastMarks(m.from, m.to).concat(m.marks.map(parseMark)) };
+  }
+  function playNode(c, mm, who, revealed) {
+    var disp = E.san(T.s, mm, T.legal);
+    T.hist.push({ ply: T.hist.length + 1, disp: disp });
+    T.s = E.apply(T.s, mm);
+    T.legal = E.legal(T.s);
+    T.node = c; T.last = [mm.from, mm.to]; T.hint = null; T.sel = null;
+    setShown(c.move);
+    return label(T.hist.length, disp);
+  }
+  function attempt(m) {
+    var key = strip(E.san(T.s, m, T.legal));
+    var ok = eligible(T.node).find(function (c) { return c.move.key === key; });
+    if (ok) {
+      T.whiteTotal++;
+      if (!T.failed) T.clean++;
+      T.failed = false;
+      var lb = playNode(ok, m, 'w');
+      T.cards = [{ type: 'good', chip: 'Lance da variante', title: lb, text: ok.move.idea }];
+      if (!eligible(ok).length) { finish(); return; }
+      T.lock = true;
+      render();
+      setTimeout(blackReply, 750);
+    } else {
+      T.errors++; T.failed = true; T.sel = null; T.hint = null;
+      var att = label(T.hist.length + 1, E.san(T.s, m, T.legal));
+      T.cards = [{ type: 'bad', chip: 'Fora da variante', title: att,
+        text: 'Esse não é o lance desta variante. Ele pode até ser jogável, mas o plano aqui é outro. Pense no que a posição pede e tente de novo, ou peça uma dica.' + hangingWarn(T.s, m) }];
+      var bw = $('bw'); bw.classList.remove('shake'); void bw.offsetWidth; bw.classList.add('shake');
+      render();
+    }
+  }
+  function blackReply() {
+    if (!T || T.done) return;
+    var kids = eligible(T.node);
+    var c = kids[Math.floor(Math.random() * kids.length)];
+    var mm = findLegal(T.s, c.move.from, c.move.to);
+    var lb = playNode(c, mm, 'b');
+    var prev = T.cards.slice(0, 1);
+    T.cards = prev.concat([{ type: 'opp', chip: 'Resposta de Black', title: lb, text: c.move.idea }]);
+    T.lock = false;
+    if (!eligible(c).length) { finish(); return; }
+    render();
+  }
+  function finish() {
+    T.done = true; T.lock = false;
+    var ln = T.lineId === 'all' ? null : byId[T.lineId];
+    var txt = 'Acertos de primeira: ' + T.clean + ' de ' + T.whiteTotal + '. Dicas: ' + T.hints + '. Tentativas fora da variante: ' + T.errors + '.';
+    if (ln) {
+      var p = prog[ln.id] || { runs: 0, best: null };
+      p.runs++;
+      var score = T.clean / Math.max(1, T.whiteTotal);
+      if (p.best == null || score > p.best) p.best = score;
+      prog[ln.id] = p; store.set('jl-prog', prog);
+    }
+    var keep = T.cards.slice(-2);
+    T.cards = keep.concat([{ type: 'good', chip: 'Variante concluída', title: ln ? ln.title : 'Treino aleatório', text: txt + (ln ? ' ' + ln.end : '') }]);
+    render();
+  }
+  function hint() {
+    if (!T || T.done || T.lock || T.s.turn !== 'w') return;
+    var c = eligible(T.node)[0];
+    T.hints++; T.failed = true; T.sel = null;
+    T.hint = { f: c.move.from, t: c.move.to };
+    T.cards = [{ type: 'hint', chip: 'Dica', title: 'Veja a seta', text: 'A seta verde mostra o lance da variante. Antes de jogar, tente explicar para si mesmo o que ele faz.' }];
+    render();
+  }
+  function reveal() {
+    if (!T || T.done || T.lock || T.s.turn !== 'w') return;
+    var c = eligible(T.node)[0];
+    var mm = findLegal(T.s, c.move.from, c.move.to);
+    T.failed = true; T.hints++;
+    T.whiteTotal++;
+    var lb = playNode(c, mm, 'w');
+    T.cards = [{ type: 'hint', chip: 'Lance revelado', title: lb, text: c.move.idea }];
+    T.failed = false;
+    if (!eligible(c).length) { finish(); return; }
+    T.lock = true; render(); setTimeout(blackReply, 750);
+  }
+  function onSquareTrain(idx) {
+    if (!T || T.done || T.lock || T.s.turn !== 'w') return;
+    var p = T.s.b[idx];
+    if (T.sel != null) {
+      var m = T.legal.find(function (x) { return x.from === T.sel && x.to === idx && (!x.promo || x.promo === 'Q'); });
+      if (m) { attempt(m); return; }
+    }
+    T.sel = (p && E.colorOf(p) === 'w' && T.legal.some(function (x) { return x.from === idx; })) ? idx : null;
+    T.hint = null;
+    render();
+  }
+  function renderTrain() {
+    var marks = [], arrows = [], dots = [];
+    if (T.shown && T.hist.length) { marks = T.shown.marks.slice(); arrows = T.shown.arrows.slice(); }
+    else if (T.last) marks = lastMarks(T.last[0], T.last[1]);
+    if (T.sel != null) {
+      marks.push({ sq: T.sel, c: 'sel' });
+      if (showDots) T.legal.forEach(function (m) { if (m.from === T.sel) dots.push({ sq: m.to, cap: !!m.cap }); });
+    }
+    if (T.hint) { arrows = [{ f: T.hint.f, t: T.hint.t, c: 'g' }]; marks.push({ sq: T.hint.f, c: 'y' }); }
+    drawBoard(T.s, { marks: marks, arrows: arrows, dots: dots });
+    var h = '';
+    T.cards.forEach(function (c) {
+      var chip = c.chip || (c.type === 'prompt' ? 'Sua vez · Brancas' : '');
+      h += '<div class="entry"><div class="head"><span class="chip ' + (c.type === 'prompt' ? '' : c.type) + '">' + chip + '</span><span class="mv">' + c.title + '</span></div><p class="txt">' + c.text + '</p></div>';
+    });
+    if (!T.done && !T.lock && T.hist.length && T.cards.length && T.cards[T.cards.length - 1].type === 'opp') {
+      h += '<p class="txt muted">Sua vez. Qual é o próximo lance das brancas?</p>';
+    }
+    $('card').innerHTML = h;
+    var idle = T.done || T.lock || T.s.turn !== 'w';
+    $('controls').innerHTML =
+      (T.done
+        ? '<button class="btn primary" data-a="again">Repetir</button><button class="btn" data-a="nextline">Próxima variante</button>'
+        : '<button class="btn" data-a="hint"' + (idle ? ' disabled' : '') + '>Dica</button><button class="btn" data-a="reveal"' + (idle ? ' disabled' : '') + '>Revelar</button><button class="btn" data-a="again">Reiniciar</button>') +
+      '<button class="btn" data-a="flip" aria-label="Virar tabuleiro">⇅</button>';
+    var ml = '';
+    T.hist.forEach(function (x) { ml += '<li><span class="mchip ' + (x.ply % 2 ? 'w' : 'b') + '">' + label(x.ply, x.disp) + '</span></li>'; });
+    $('moves').innerHTML = ml;
+    var p = T.lineId !== 'all' ? prog[T.lineId] : null;
+    $('prog').textContent = p ? 'Concluída ' + p.runs + 'x · melhor: ' + Math.round(p.best * 100) + '% de primeira' : '';
+  }
+
+  // ---------- geral ----------
+  function fillSelect() {
+    var sel = $('line'), cur = mode === 'study' ? studyLine : trainLine, h = '';
+    if (mode === 'train') h += '<option value="all">Todas as variantes (aleatório)</option>';
+    var groups = {};
+    LINES.forEach(function (l) { (groups[l.group] = groups[l.group] || []).push(l); });
+    Object.keys(groups).forEach(function (g) {
+      h += '<optgroup label="' + g + '">';
+      groups[g].forEach(function (l) {
+        var done = prog[l.id] && mode === 'train' ? ' ✓' : '';
+        h += '<option value="' + l.id + '">' + l.title + done + '</option>';
+      });
+      h += '</optgroup>';
+    });
+    sel.innerHTML = h;
+    sel.value = cur;
+  }
+  function render() {
+    $('tab-study').setAttribute('aria-selected', mode === 'study');
+    $('tab-train').setAttribute('aria-selected', mode === 'train');
+    if (mode === 'study') renderStudy(); else { if (!T) startTrain(); else renderTrain(); }
+  }
+  function setMode(m) {
+    mode = m; store.set('jl-mode', m);
+    T = null; sPly = 0;
+    fillSelect();
+    render();
+  }
+
+  $('tab-study').addEventListener('click', function () { setMode('study'); });
+  $('tab-train').addEventListener('click', function () { setMode('train'); });
+  $('line').addEventListener('change', function (e) {
+    if (mode === 'study') { studyLine = e.target.value; store.set('jl-study', studyLine); sPly = 0; }
+    else { trainLine = e.target.value; store.set('jl-train', trainLine); T = null; }
+    render();
+  });
+  $('dots').checked = showDots;
+  $('dots').addEventListener('change', function (e) { showDots = e.target.checked; store.set('jl-dots', showDots); render(); });
+
+  $('board').addEventListener('click', function (e) {
+    if (mode !== 'train') return;
+    var r = $('board').getBoundingClientRect();
+    var f = Math.floor((e.clientX - r.left) / r.width * 8), rk = Math.floor((e.clientY - r.top) / r.height * 8);
+    if (f < 0 || f > 7 || rk < 0 || rk > 7) return;
+    onSquareTrain((flip ? rk : 7 - rk) * 8 + (flip ? 7 - f : f));
+  });
+  $('controls').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-a]');
+    if (!b || b.disabled) return;
+    var a = b.getAttribute('data-a'), L = byId[studyLine];
+    if (a === 'flip') { flip = !flip; render(); return; }
+    if (mode === 'study') {
+      if (a === 'first') sPly = 0;
+      if (a === 'prev') sPly = Math.max(0, sPly - 1);
+      if (a === 'next') sPly = Math.min(L.moves.length, sPly + 1);
+      if (a === 'last') sPly = L.moves.length;
+      render();
+    } else {
+      if (a === 'hint') hint();
+      if (a === 'reveal') reveal();
+      if (a === 'again') startTrain();
+      if (a === 'nextline') {
+        var ids = ['all'].concat(LINES.map(function (l) { return l.id; }));
+        trainLine = ids[(ids.indexOf(trainLine) + 1) % ids.length];
+        store.set('jl-train', trainLine); fillSelect(); startTrain();
+      }
+    }
+  });
+  $('moves').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-p]');
+    if (b && mode === 'study') { sPly = +b.getAttribute('data-p'); render(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (mode !== 'study' || e.target.tagName === 'SELECT') return;
+    var L = byId[studyLine];
+    if (e.key === 'ArrowRight') { sPly = Math.min(L.moves.length, sPly + 1); render(); }
+    if (e.key === 'ArrowLeft') { sPly = Math.max(0, sPly - 1); render(); }
+  });
+
+  fillSelect();
+  render();
+})();
+</script>
+
+</body></html>
